@@ -13,21 +13,9 @@ Fluglärm-Frühwarnsystem als Webapp. Warnt in Echtzeit vor Flugzeugen, die übe
 
 ## Screenshot
 
-```
-╭──────────────────────╮
-│  Flightnoise       ● │
-│                       │
-│       ┌─────┐        │
-│       │  ✓  │        │
-│       │Alles│        │
-│       │ruhig│        │
-│       └─────┘        │
-│                       │
-│   FLÜGE IN DER NÄHE  │
-│  Keine Flugzeuge in   │
-│     der Nähe          │
-╰──────────────────────╯
-```
+<p align="center">
+  <img src="screenshot.png" alt="Flightnoise Screenshot" width="300">
+</p>
 
 ## Schnellstart
 
