@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Flightnoise">
+  <meta name="theme-color" content="#f0f4f8">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="stylesheet" href="/style.css">
+  <title>Flightnoise</title>
+</head>
+<body>
+  <div id="app">
+    <header>
+      <div class="header-left">
+        <h1>Flightnoise</h1>
+      </div>
+      <div class="header-right">
+        <label class="dark-toggle" aria-label="Dark Mode">
+          <input type="checkbox" id="dark-toggle">
+          <span class="dark-toggle-slider"></span>
+        </label>
+        <span id="connection-dot"></span>
+      </div>
+    </header>
+
+    <main>
+      <!-- Status-Kreis -->
+      <div id="status-circle" class="clear">
+        <div id="status-icon">...</div>
+        <div id="status-text">Verbinde...</div>
+        <div id="status-countdown"></div>
+      </div>
+
+      <!-- Nächstes erwartetes Flugzeug -->
+      <div id="next-expected" class="next-expected hidden"></div>
+
+      <!-- Flugzeug-Liste -->
+      <section id="flights-section">
+        <h2 id="flights-heading">Flüge in der Nähe</h2>
+        <div id="flights-list"></div>
+      </section>
+    </main>
+
+    <footer>
+      <div id="last-update">Warte auf Daten...</div>
+      <div id="source-info"></div>
+      <div class="footer-controls">
+        <button id="btn-sound" aria-label="Ton umschalten">
+          <span id="sound-icon">🔕</span> Ton
+        </button>
+        <button id="btn-push" aria-label="Push-Mitteilungen">
+          📲 Push
+        </button>
+      </div>
+
+      <!-- ntfy Setup Dialog -->
+      <div id="ntfy-dialog" class="dialog-overlay hidden">
+        <div class="dialog-box">
+          <h3>Push-Mitteilungen einrichten</h3>
+          <ol class="ntfy-steps">
+            <li>Installiere die <strong>ntfy</strong> App (kostenlos im App Store)</li>
+            <li>Öffne ntfy und tippe auf <strong>+</strong></li>
+            <li>Gib als Topic den gleichen Namen ein wie hier unten</li>
+            <li>Fertig! Du bekommst jetzt Mitteilungen</li>
+          </ol>
+          <div class="ntfy-input-row">
+            <span class="ntfy-prefix">ntfy.sh/</span>
+            <input id="ntfy-topic" type="text" placeholder="flightnoise-meinname" autocapitalize="none" autocorrect="off" spellcheck="false">
+          </div>
+          <div class="dialog-buttons">
+            <button id="ntfy-cancel" class="btn-secondary">Abbrechen</button>
+            <button id="ntfy-save" class="btn-primary">Aktivieren</button>
+          </div>
+          <div id="ntfy-status"></div>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

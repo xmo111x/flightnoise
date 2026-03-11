@@ -1,0 +1,492 @@
+/* ── Variablen ──────────────────────────────────────── */
+:root {
+  --green: #22c55e;
+  --green-light: #dcfce7;
+  --green-glow: rgba(34, 197, 94, 0.25);
+  --amber: #f59e0b;
+  --amber-light: #fef3c7;
+  --amber-glow: rgba(245, 158, 11, 0.3);
+  --red: #ef4444;
+  --red-light: #fee2e2;
+  --red-glow: rgba(239, 68, 68, 0.35);
+  --text: #1e293b;
+  --text-secondary: #64748b;
+  --bg: #f0f4f8;
+  --card: #ffffff;
+  --card-shadow: rgba(0, 0, 0, 0.06);
+}
+
+/* ── Reset & Basis ─────────────────────────────────── */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+}
+
+#app {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 16px;
+  padding-top: max(16px, env(safe-area-inset-top));
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Header ────────────────────────────────────────── */
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+header h1 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+#connection-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #94a3b8;
+  transition: background 0.3s;
+}
+
+#connection-dot.connected { background: var(--green); }
+#connection-dot.error { background: var(--red); }
+
+/* ── Status-Kreis ──────────────────────────────────── */
+main {
+  flex: 1;
+}
+
+#status-circle {
+  width: 230px;
+  height: 230px;
+  border-radius: 50%;
+  margin: 16px auto 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.6s ease, box-shadow 0.6s ease;
+  position: relative;
+}
+
+#status-circle.clear {
+  background: linear-gradient(145deg, #dcfce7, #bbf7d0);
+  box-shadow: 0 8px 30px var(--green-glow);
+}
+
+#status-circle.approaching {
+  background: linear-gradient(145deg, #fef3c7, #fde68a);
+  box-shadow: 0 8px 30px var(--amber-glow);
+  animation: pulse-amber 2s ease-in-out infinite;
+}
+
+#status-circle.overhead {
+  background: linear-gradient(145deg, #fee2e2, #fecaca);
+  box-shadow: 0 8px 30px var(--red-glow);
+  animation: pulse-red 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse-amber {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+
+@keyframes pulse-red {
+  0%, 100% { transform: scale(1); box-shadow: 0 8px 30px var(--red-glow); }
+  50% { transform: scale(1.03); box-shadow: 0 8px 40px rgba(239, 68, 68, 0.5); }
+}
+
+#status-icon {
+  font-size: 3.2rem;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+#status-text {
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+  padding: 0 16px;
+  color: var(--text);
+}
+
+#status-countdown {
+  font-size: 2.2rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+#status-circle.approaching #status-countdown { color: #b45309; }
+#status-circle.overhead #status-countdown { color: #dc2626; }
+
+/* ── Nächstes Flugzeug ─────────────────────────────── */
+.next-expected {
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  padding: 10px 16px;
+  margin-bottom: 8px;
+  background: var(--card);
+  border-radius: 12px;
+  box-shadow: 0 1px 4px var(--card-shadow);
+}
+
+.next-expected .next-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.next-expected .next-time {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.next-expected .next-detail {
+  font-size: 0.75rem;
+  margin-top: 2px;
+}
+
+.next-expected.hidden {
+  display: none;
+}
+
+/* ── Flug-Liste ────────────────────────────────────── */
+#flights-section {
+  margin-top: 8px;
+}
+
+#flights-heading {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.flight-card {
+  background: var(--card);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 8px;
+  box-shadow: 0 1px 4px var(--card-shadow);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: border-left-color 0.3s;
+  border-left: 4px solid transparent;
+}
+
+.flight-card.approaching {
+  border-left-color: var(--amber);
+}
+
+.flight-card.overhead {
+  border-left-color: var(--red);
+}
+
+.flight-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.flight-callsign {
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: 0.02em;
+}
+
+.flight-details {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.flight-timer {
+  font-size: 1.3rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+  margin-left: 12px;
+}
+
+.flight-timer-label {
+  font-size: 0.65rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-align: right;
+  color: var(--text-secondary);
+}
+
+.flight-card.approaching .flight-timer { color: #b45309; }
+.flight-card.overhead .flight-timer { color: #dc2626; }
+
+.empty-state {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 24px 16px;
+  font-size: 0.9rem;
+}
+
+/* ── Footer ────────────────────────────────────────── */
+footer {
+  margin-top: auto;
+  padding-top: 24px;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+#last-update {
+  margin-bottom: 2px;
+}
+
+#source-info {
+  margin-bottom: 10px;
+  font-size: 0.7rem;
+}
+
+.footer-controls {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.footer-controls button {
+  padding: 8px 18px;
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
+  background: var(--card);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.footer-controls button.active {
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #2563eb;
+}
+
+/* ── ntfy Dialog ───────────────────────────────────── */
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 16px;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.dialog-overlay.hidden {
+  display: none;
+}
+
+.dialog-box {
+  background: var(--card);
+  border-radius: 20px;
+  padding: 24px;
+  max-width: 380px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.dialog-box h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.ntfy-steps {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  padding-left: 20px;
+  margin-bottom: 18px;
+  line-height: 1.6;
+}
+
+.ntfy-steps strong {
+  color: var(--text);
+}
+
+.ntfy-input-row {
+  display: flex;
+  align-items: center;
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 4px 12px;
+  margin-bottom: 16px;
+}
+
+.ntfy-prefix {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+#ntfy-topic {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 0.95rem;
+  padding: 10px 4px;
+  color: var(--text);
+  outline: none;
+  font-family: inherit;
+}
+
+.dialog-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.dialog-buttons button {
+  flex: 1;
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn-secondary {
+  background: var(--bg);
+  color: var(--text-secondary);
+}
+
+.btn-primary {
+  background: #3b82f6;
+  color: white;
+}
+
+#ntfy-status {
+  text-align: center;
+  font-size: 0.8rem;
+  margin-top: 10px;
+  color: var(--green);
+  min-height: 1.2em;
+}
+
+/* ── Dark Mode Toggle ──────────────────────────────── */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dark-toggle {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 22px;
+  cursor: pointer;
+}
+
+.dark-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.dark-toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: #cbd5e1;
+  border-radius: 22px;
+  transition: background 0.3s;
+}
+
+.dark-toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  left: 3px;
+  top: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.3s;
+}
+
+.dark-toggle input:checked + .dark-toggle-slider {
+  background: #3b82f6;
+}
+
+.dark-toggle input:checked + .dark-toggle-slider::before {
+  transform: translateX(18px);
+}
+
+/* ── Dark Mode ─────────────────────────────────────── */
+body.dark {
+  --text: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --bg: #0f172a;
+  --card: #1e293b;
+  --card-shadow: rgba(0, 0, 0, 0.3);
+}
+
+body.dark #status-circle.clear {
+  background: linear-gradient(145deg, #166534, #15803d);
+}
+body.dark #status-circle.approaching {
+  background: linear-gradient(145deg, #92400e, #b45309);
+}
+body.dark #status-circle.overhead {
+  background: linear-gradient(145deg, #991b1b, #dc2626);
+}
+
+body.dark #status-circle.approaching #status-countdown { color: #fbbf24; }
+body.dark #status-circle.overhead #status-countdown { color: #fca5a5; }
+
+body.dark .flight-card.approaching .flight-timer { color: #fbbf24; }
+body.dark .flight-card.overhead .flight-timer { color: #fca5a5; }
+
+body.dark .footer-controls button {
+  background: #1e293b;
+  border-color: #334155;
+}
+body.dark .footer-controls button.active {
+  background: #1e3a5f;
+  border-color: #3b82f6;
+  color: #60a5fa;
+}
+
+body.dark .dark-toggle-slider {
+  background: #475569;
+}
