@@ -32,6 +32,9 @@ npm install
 
 # Server starten
 npm start
+
+# Oder mit pm2 (Auto-Restart bei Crash)
+pm2 start server.js --name flightnoise --watch
 ```
 
 Webapp öffnen: `http://localhost:3000`
