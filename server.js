@@ -4,8 +4,8 @@ const os = require('os');
 
 // ── Konfiguration ──────────────────────────────────────────────
 const CONFIG = {
-  HOME_LAT: 48.64401902702351,
-  HOME_LON: 9.003694517028466,
+  HOME_LAT: 48.7758,              // Deine Koordinaten hier eintragen
+  HOME_LON: 9.1829,               // Beispiel: Stuttgart Mitte
   SCAN_RADIUS_KM: 75,       // Scan-Radius für API-Abfragen
   NOISE_RADIUS_KM: 5,       // Radius in dem Fluglärm hörbar ist
   WARNING_SECONDS: 120,      // Vorwarnzeit in Sekunden
