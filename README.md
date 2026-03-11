@@ -57,7 +57,8 @@ In `server.js` im `CONFIG`-Objekt:
 1. [ntfy](https://ntfy.sh) App installieren (kostenlos, iOS & Android)
 2. In der Webapp auf "Push" klicken und einen Topic-Namen vergeben
 3. In der ntfy App denselben Topic abonnieren
-4. Alle Geräte mit dem gleichen Topic bekommen die Benachrichtigung
+4. Jedes Gerät hat seinen eigenen Topic – mehrere Geräte können unabhängig Push empfangen
+5. Push per Klick auf "Push an" wieder deaktivieren – der Topic wird beim nächsten Mal vorgeschlagen
 
 ## Datenquellen
 

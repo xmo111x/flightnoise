@@ -4,8 +4,8 @@ const os = require('os');
 
 // ── Konfiguration ──────────────────────────────────────────────
 const CONFIG = {
-  HOME_LAT: 48.7758,              // Deine Koordinaten hier eintragen
-  HOME_LON: 9.1829,               // Beispiel: Stuttgart Mitte
+  HOME_LAT: 48.7758, // Deine Koordinaten hier eintragen
+  HOME_LON: 9.1829, // Beispiel: Stuttgart Mitte
   SCAN_RADIUS_KM: 75,       // Scan-Radius für API-Abfragen
   NOISE_RADIUS_KM: 5,       // Radius in dem Fluglärm hörbar ist
   WARNING_SECONDS: 120,      // Vorwarnzeit in Sekunden
@@ -13,7 +13,6 @@ const CONFIG = {
   PORT: 3000,
   MIN_ALTITUDE_M: 50,        // Unter 50m = am Boden
   MAX_ALTITUDE_M: 4000,      // Über 4000m = Reiseflughöhe, kaum Lärm
-  NTFY_TOPIC: '',            // ntfy.sh Topic für Push-Notifications (leer = deaktiviert)
   NTFY_COOLDOWN_S: 120,      // Mindestabstand zwischen Notifications in Sekunden
 };
 
@@ -24,6 +23,7 @@ let lastUpdate = null;
 let lastSource = null;
 let sseClients = [];
 let consecutiveErrors = 0;
+let ntfyTopics = new Set();    // Registrierte ntfy.sh Topics (pro Device)
 let lastNotificationTime = 0;
 let previousOverallStatus = 'clear';
 
@@ -64,24 +64,37 @@ app.get('/api/status', (_req, res) => {
     alerts: currentAlerts,
     lastUpdate,
     source: lastSource,
-    config: { noiseRadius: CONFIG.NOISE_RADIUS_KM, ntfyTopic: CONFIG.NTFY_TOPIC },
+    config: { noiseRadius: CONFIG.NOISE_RADIUS_KM, ntfyTopics: ntfyTopics.size },
   });
 });
 
-// ntfy-Topic setzen/abfragen
-app.get('/api/ntfy', (_req, res) => {
-  res.json({ topic: CONFIG.NTFY_TOPIC });
+// ntfy-Topics verwalten (pro Device)
+app.get('/api/ntfy', (req, res) => {
+  const topic = (req.query.topic || '').trim();
+  if (topic) {
+    res.json({ topic, active: ntfyTopics.has(topic) });
+  } else {
+    res.json({ count: ntfyTopics.size });
+  }
 });
 
 app.post('/api/ntfy', (req, res) => {
   const topic = (req.body.topic || '').trim();
-  CONFIG.NTFY_TOPIC = topic;
-  if (topic) {
-    console.log(`[${timestamp()}] Push-Notifications aktiviert: ntfy.sh/${topic}`);
-  } else {
-    console.log(`[${timestamp()}] Push-Notifications deaktiviert`);
+  const oldTopic = (req.body.oldTopic || '').trim();
+
+  // Altes Topic entfernen
+  if (oldTopic && oldTopic !== topic) {
+    ntfyTopics.delete(oldTopic);
   }
-  res.json({ topic: CONFIG.NTFY_TOPIC, active: !!topic });
+
+  if (topic) {
+    ntfyTopics.add(topic);
+    console.log(`[${timestamp()}] Push-Topic registriert: ntfy.sh/${topic} (${ntfyTopics.size} aktiv)`);
+  } else if (oldTopic) {
+    console.log(`[${timestamp()}] Push-Topic entfernt: ntfy.sh/${oldTopic} (${ntfyTopics.size} aktiv)`);
+  }
+
+  res.json({ topic, active: !!topic, totalTopics: ntfyTopics.size });
 });
 
 function broadcast(data) {
@@ -392,12 +405,11 @@ async function findUpcoming(aircraft) {
 
 // ── Push-Notifications (ntfy.sh) ───────────────────────────────
 async function sendPushNotification(alerts) {
-  if (!CONFIG.NTFY_TOPIC) return;
+  if (ntfyTopics.size === 0) return;
 
   const now = Date.now();
   const approaching = alerts.filter(a => a.status === 'approaching');
   const overhead = alerts.filter(a => a.status === 'overhead');
-  const hasAlerts = approaching.length > 0 || overhead.length > 0;
   const currentStatus = overhead.length > 0 ? 'overhead' : (approaching.length > 0 ? 'approaching' : 'clear');
 
   // Nur senden wenn Status von "clear" auf "approaching" wechselt UND Cooldown abgelaufen
@@ -421,8 +433,9 @@ async function sendPushNotification(alerts) {
     ? `${first.callsign} in ca. ${seconds} Sekunden (${first.altitude || '?'}m Höhe)`
     : `${first.callsign} ist über euch (${first.altitude || '?'}m Höhe)`;
 
-  try {
-    await fetch(`https://ntfy.sh/${CONFIG.NTFY_TOPIC}`, {
+  // An alle registrierten Topics senden
+  const promises = [...ntfyTopics].map(topic =>
+    fetch(`https://ntfy.sh/${topic}`, {
       method: 'POST',
       headers: {
         'Title': title,
@@ -431,11 +444,13 @@ async function sendPushNotification(alerts) {
         'Click': `http://${getLocalIP()}:${CONFIG.PORT}`,
       },
       body: body,
-    });
-    console.log(`[${timestamp()}] Push-Notification gesendet: ${body}`);
-  } catch (e) {
-    console.warn(`[${timestamp()}] ntfy-Fehler: ${e.message}`);
-  }
+    }).catch(e => {
+      console.warn(`[${timestamp()}] ntfy-Fehler (${topic}): ${e.message}`);
+    })
+  );
+
+  await Promise.allSettled(promises);
+  console.log(`[${timestamp()}] Push an ${ntfyTopics.size} Topic(s) gesendet: ${body}`);
 }
 
 // ── Update-Loop ────────────────────────────────────────────────

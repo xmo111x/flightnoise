@@ -304,21 +304,45 @@ const ntfyCancel = document.getElementById('ntfy-cancel');
 const ntfySave = document.getElementById('ntfy-save');
 const ntfyStatus = document.getElementById('ntfy-status');
 
-// Aktuelles Topic beim Start laden
-fetch('/api/ntfy')
-  .then(r => r.json())
-  .then(data => {
-    if (data.topic) {
-      ntfyTopicInput.value = data.topic;
-      btnPush.classList.add('active');
-      btnPush.innerHTML = '📲 Push an';
-    }
-  })
-  .catch(() => {});
+// Topic aus localStorage laden (jedes Device hat seinen eigenen)
+const savedTopic = localStorage.getItem('ntfyTopic') || '';
+if (savedTopic) {
+  ntfyTopicInput.value = savedTopic;
+  btnPush.classList.add('active');
+  btnPush.innerHTML = '📲 Push an';
 
-btnPush.addEventListener('click', () => {
-  ntfyDialog.classList.remove('hidden');
-  ntfyStatus.textContent = '';
+  // Beim Server re-registrieren (falls Server neugestartet wurde)
+  fetch('/api/ntfy', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ topic: savedTopic }),
+  }).catch(() => {});
+}
+
+btnPush.addEventListener('click', async () => {
+  const activeTopic = localStorage.getItem('ntfyTopic') || '';
+
+  if (activeTopic) {
+    // Push ist aktiv → direkt deaktivieren
+    try {
+      await fetch('/api/ntfy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ topic: '', oldTopic: activeTopic }),
+      });
+    } catch (_) {}
+    localStorage.removeItem('ntfyTopic');
+    btnPush.classList.remove('active');
+    btnPush.innerHTML = '📲 Push';
+  } else {
+    // Push ist aus → Dialog öffnen, letzten Topic vorschlagen
+    const lastTopic = localStorage.getItem('ntfyLastTopic') || '';
+    if (lastTopic && !ntfyTopicInput.value.trim()) {
+      ntfyTopicInput.value = lastTopic;
+    }
+    ntfyDialog.classList.remove('hidden');
+    ntfyStatus.textContent = '';
+  }
 });
 
 ntfyCancel.addEventListener('click', () => {
@@ -327,16 +351,19 @@ ntfyCancel.addEventListener('click', () => {
 
 ntfySave.addEventListener('click', async () => {
   const topic = ntfyTopicInput.value.trim();
+  const oldTopic = localStorage.getItem('ntfyTopic') || '';
 
   try {
     const res = await fetch('/api/ntfy', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ topic }),
+      body: JSON.stringify({ topic, oldTopic }),
     });
     const data = await res.json();
 
     if (data.active) {
+      localStorage.setItem('ntfyTopic', topic);
+      localStorage.setItem('ntfyLastTopic', topic);
       ntfyStatus.style.color = 'var(--green)';
       ntfyStatus.textContent = 'Aktiviert! Abonniere "' + data.topic + '" in der ntfy App.';
       btnPush.classList.add('active');
@@ -354,6 +381,7 @@ ntfySave.addEventListener('click', async () => {
         } catch (_) {}
       }, 500);
     } else {
+      localStorage.removeItem('ntfyTopic');
       ntfyStatus.style.color = 'var(--text-secondary)';
       ntfyStatus.textContent = 'Push-Mitteilungen deaktiviert.';
       btnPush.classList.remove('active');

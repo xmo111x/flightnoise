@@ -31,7 +31,8 @@ Express.js-Server (Node.js), der Flugzeugdaten von adsb.lol (Fallback: OpenSky) 
 - Client-seitige Countdown-Interpolation zwischen Server-Updates
 - Direkter Übergang gelb→rot (kein grüner Zwischenzustand) via Client-Logik
 - Dark Mode Toggle (localStorage-gespeichert)
-- Push-Notifications via ntfy.sh mit Click-URL zum Öffnen der Webapp
+- Push-Notifications via ntfy.sh mit Click-URL zum Öffnen der Webapp (pro Device, Set im Server-Memory)
+- Push-Topic wird im localStorage des Devices gespeichert, beim App-Start automatisch re-registriert
 - ntfy Title darf kein Unicode/Emoji enthalten (HTTP-Header-Limitation), stattdessen `Tags: airplane`
 - **nextExpected** (aktuell deaktiviert): Zeigt nächsten STR-Anflug basierend auf adsb.lol routeset API
 
@@ -43,5 +44,5 @@ node server.js
 Erreichbar unter http://localhost:3000 und im Netzwerk.
 
 ## Bekannte Hinweise
-- Nach Server-Neustart muss der ntfy-Topic im Browser neu aktiviert werden (wird nur im Speicher gehalten)
+- Nach Server-Neustart werden ntfy-Topics automatisch re-registriert sobald ein Device die App öffnet
 - Icon wird auf iPhone erst nach erneutem "Zum Home-Bildschirm hinzufügen" aktualisiert
