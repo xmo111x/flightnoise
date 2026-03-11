@@ -85,4 +85,4 @@ In `server.js` im `CONFIG`-Objekt:
 
 ## Lizenz
 
-MIT
+Apache License 2.0 – siehe [LICENSE](LICENSE)
